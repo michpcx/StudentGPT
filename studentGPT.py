@@ -122,7 +122,7 @@ def read_docx(file_path):
 
 def generate_revision_notes(text):
     completion = openai.ChatCompletion.create(
-            model="gpt-4",
+            model="gpt-3.5-turbo",
             messages=[
                 {"role": "user", "content": "Create extensive revision notes from the following notes: " + text}
             ]
