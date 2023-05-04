@@ -2,6 +2,9 @@
 
 StudentGPT is a Python-based side project designed to aid students in digesting and retaining information from a variety of sources. It has the ability to summarize PDF files, including lengthy research papers, extract essential points and keywords, provide keyword definitions, create revision notes from class notes, and generate quizzes with answers based on the content of any given PDF.
 
+![StudentGPT 0.3v](studentgpt.png)
+
+
 ## Features
 
 - Summarize any PDF file
