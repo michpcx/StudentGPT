@@ -30,3 +30,8 @@ StudentGPT uses the GPT-3.5 Turbo model instead of GPT-4 because it is more cost
 3. Install the required dependencies by running the following command pip install -r requirements.txt
 4. Run the program and enter your OpenAI API key when prompted
 5. Enjoy an efficient and effective study experience with StudentGPT!
+
+## Release notes
+
+======== 0.32v ========
+- Added ability to choose model for each individual task in settings
