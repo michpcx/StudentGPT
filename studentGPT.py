@@ -55,10 +55,55 @@ def list_of_settings():
                 settings_output = "Terminal"
                 modify_config('main', 'output', "Terminal")
             return ""
+        elif user_input == "2":
+            global settings_model_summarisation
+            if settings_model_summarisation == "gpt-3.5-turbo":
+                settings_model_summarisation = "gpt-4"
+                modify_config('main', 'model_summarisation', "gpt-4")
+            elif settings_model_summarisation == "gpt-4":
+                settings_model_summarisation = "gpt-3.5-turbo"
+                modify_config('main', 'model_summarisation', "gpt-3.5-turbo")
+            return ""
+        elif user_input == "3":
+            global settings_model_key_points_extraction
+            if settings_model_key_points_extraction == "gpt-3.5-turbo":
+                settings_model_key_points_extraction = "gpt-4"
+                modify_config('main', 'model_key_points_extraction', "gpt-4")
+            elif settings_model_key_points_extraction == "gpt-4":
+                settings_model_key_points_extraction = "gpt-3.5-turbo"
+                modify_config('main', 'model_key_points_extraction', "gpt-3.5-turbo")
+            return ""
+        elif user_input == "4":
+            global settings_model_revision_notes
+            if settings_model_revision_notes == "gpt-3.5-turbo":
+                settings_model_revision_notes = "gpt-4"
+                modify_config('main', 'model_revision_notes', "gpt-4")
+            elif settings_model_revision_notes == "gpt-4":
+                settings_model_revision_notes = "gpt-3.5-turbo"
+                modify_config('main', 'model_revision_notes', "gpt-3.5-turbo")
+            return ""
+        elif user_input == "5":
+            global settings_model_quiz
+            if settings_model_quiz == "gpt-3.5-turbo":
+                settings_model_quiz = "gpt-4"
+                modify_config('main', 'model_quiz', "gpt-4")
+            elif settings_model_quiz == "gpt-4":
+                settings_model_quiz = "gpt-3.5-turbo"
+                modify_config('main', 'model_quiz', "gpt-3.5-turbo")
+            return ""
+        elif user_input == "6":
+            global settings_model_key_words_extraction
+            if settings_model_key_words_extraction == "gpt-3.5-turbo":
+                settings_model_key_words_extraction = "gpt-4"
+                modify_config('main', 'model_key_words_extraction', "gpt-4")
+            elif settings_model_key_words_extraction == "gpt-4":
+                settings_model_key_words_extraction = "gpt-3.5-turbo"
+                modify_config('main', 'model_key_words_extraction', "gpt-3.5-turbo")
+            return ""
         elif user_input == "0":
             return "exit"
         else:
-            print(f"{Back.RED}{Fore.BLACK}Invalid input. Please choose [1-1].{Style.RESET_ALL}")
+            print(f"{Back.RED}{Fore.BLACK}Invalid input. Please choose [0-6].{Style.RESET_ALL}")
 
 def get_user_choice(files):
     while True:
@@ -121,8 +166,9 @@ def read_docx(file_path):
     return '\n'.join(full_text)
 
 def generate_revision_notes(text):
+    global settings_model_revision_notes
     completion = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+            model=settings_model_revision_notes,
             messages=[
                 {"role": "user", "content": "Create extensive revision notes from the following notes: " + text}
             ]
@@ -203,9 +249,29 @@ def clean_terminal():
     os.system('cls')
 
 def modify_config(section, key, value):
-    config[section] = {key: value}
+    global config
+    config.read('config.ini')
+    if section not in config:
+        config[section] = {}
+    config[section][key] = value
     with open(config_file, 'w') as configfile:
         config.write(configfile)
+
+def check_gpt4_availability():
+    #Checking model
+    try:
+        completion = openai.ChatCompletion.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "user", "content": "Hi!"}
+                ]
+                )
+        return True
+    except Exception as e:
+        print(f"{Back.RED}{Fore.BLACK}OpenAI API returned an API Error: {e}{Style.RESET_ALL}")
+        print(f"{Back.RED}{Fore.BLACK}If your account does not have GPT-4 model API support yet, make sure to switch it back to GPT-3.5-Turbo in the settings. {Style.RESET_ALL}")
+        print(f"{Back.RED}{Fore.BLACK}If you don't know what that means, go to settings of this app and change model from GPT-4 to GPT-3.5-Turbo or in the 'config.ini' file. {Style.RESET_ALL}")
+        return False
 
 
 
@@ -214,8 +280,13 @@ def modify_config(section, key, value):
 
 
 ### MAIN START
-studentGPT_version = 0.30
+studentGPT_version = 0.32
 settings_output = "Terminal"
+settings_model_summarisation = "gpt-3.5-turbo"
+settings_model_key_points_extraction = "gpt-3.5-turbo"
+settings_model_revision_notes = "gpt-3.5-turbo"
+settings_model_quiz = "gpt-3.5-turbo"
+settings_model_key_words_extraction = "gpt-3.5-turbo"
 config_file = 'config.ini'
 clean_terminal()
 
@@ -225,10 +296,16 @@ if os.path.exists(config_file):
     config.read(config_file)
     try:
         settings_output = config.get('main', 'output')
+        settings_model_summarisation = config.get('main', 'model_summarisation')
+        settings_model_key_points_extraction = config.get('main', 'model_key_points_extraction')
+        settings_model_revision_notes = config.get('main', 'model_revision_notes')
+        settings_model_quiz = config.get('main', 'model_quiz')
+        settings_model_key_words_extraction = config.get('main', 'model_key_words_extraction')
         settings_api_key = config.get('auth', 'openai_api_key')
         openai.api_key = settings_api_key
     except (configparser.NoSectionError, configparser.NoOptionError) as e:
         print(f"{Back.RED}{Fore.BLACK}An error occurred while reading config file: {e}. \nRemove the 'config.ini' file and restart the program.{Style.RESET_ALL}")
+        input()
         quit()
 else:
     settings_api_key = ""
@@ -238,6 +315,11 @@ else:
         if len(settings_api_key) != 51:
             print("The input must be exactly 51 characters long. Please try again.")
     modify_config('main', 'output', settings_output)
+    modify_config('main', 'model_summarisation', "gpt-3.5-turbo")
+    modify_config('main', 'model_key_points_extraction', "gpt-3.5-turbo")
+    modify_config('main', 'model_revision_notes', "gpt-3.5-turbo")
+    modify_config('main', 'model_quiz', "gpt-3.5-turbo")
+    modify_config('main', 'model_key_words_extraction', "gpt-3.5-turbo")
     modify_config('auth', 'openai_api_key', settings_api_key)
     openai.api_key = settings_api_key
     clean_terminal()
@@ -246,26 +328,48 @@ else:
 
 # Validating the config file
 if(settings_output != "Terminal" and settings_output != "Both" and settings_output != "File"):
-        print(f"{Back.RED}{Fore.BLACK}An error occurred while reading config file: 'output' value is invalid. \nFixing it...{Style.RESET_ALL}")
-        modify_config('main', 'output', "Terminal")
+    print(f"{Back.RED}{Fore.BLACK}An error occurred while reading config file: 'output' value is invalid. \nFixing it...{Style.RESET_ALL}")
+    modify_config('main', 'output', "Terminal")
+if(settings_model_summarisation != "gpt-3.5-turbo" and settings_model_summarisation != "gpt-4"):
+    print(f"{Back.RED}{Fore.BLACK}An error occurred while reading config file: 'model_summarisation' value is invalid. \nFixing it...{Style.RESET_ALL}")
+    modify_config('main', 'model_summarisation', "gpt-3.5-turbo")
+if(settings_model_key_points_extraction != "gpt-3.5-turbo" and settings_model_key_points_extraction != "gpt-4"):
+    print(f"{Back.RED}{Fore.BLACK}An error occurred while reading config file: 'model_key_points_extraction' value is invalid. \nFixing it...{Style.RESET_ALL}")
+    modify_config('main', 'model_key_points_extraction', "gpt-3.5-turbo")
+if(settings_model_revision_notes != "gpt-3.5-turbo" and settings_model_revision_notes != "gpt-4"):
+    print(f"{Back.RED}{Fore.BLACK}An error occurred while reading config file: 'model_revision_notes' value is invalid. \nFixing it...{Style.RESET_ALL}")
+    modify_config('main', 'model_revision_notes', "gpt-3.5-turbo")
+if(settings_model_quiz != "gpt-3.5-turbo" and settings_model_quiz != "gpt-4"):
+    print(f"{Back.RED}{Fore.BLACK}An error occurred while reading config file: 'model_quiz' value is invalid. \nFixing it...{Style.RESET_ALL}")
+    modify_config('main', 'model_quiz', "gpt-3.5-turbo")
+if(settings_model_key_words_extraction != "gpt-3.5-turbo" and settings_model_key_words_extraction != "gpt-4"):
+    print(f"{Back.RED}{Fore.BLACK}An error occurred while reading config file: 'model_key_words_extraction' value is invalid. \nFixing it...{Style.RESET_ALL}")
+    modify_config('main', 'model_key_words_extraction', "gpt-3.5-turbo")
+if(settings_model_key_points_extraction == "gpt-4" or settings_model_key_words_extraction == "gpt-4" or settings_model_quiz == "gpt-4" or settings_model_revision_notes == "gpt-4" or settings_model_summarisation == "gpt-4"):
+    if check_gpt4_availability() == False:
+        input()
+        quit()
+
 
 #Checking API key
 try:
     response = openai.Completion.create(prompt="Hello world", model="text-davinci-003")
 except openai.error.APIError as e:
     print(f"{Back.RED}{Fore.BLACK}OpenAI API returned an API Error: {e}{Style.RESET_ALL}")
+    input()
     quit()
 except openai.error.APIConnectionError as e:
     print(f"{Back.RED}{Fore.BLACK}Failed to connect to OpenAI API: {e}{Style.RESET_ALL}")
+    input()
     quit()
 except openai.error.RateLimitError as e:
     print(f"{Back.RED}{Fore.BLACK}OpenAI API request exceeded rate limit: {e}{Style.RESET_ALL}")
+    input()
     quit()
 except openai.error.AuthenticationError as e:
     print(f"{Back.RED}{Fore.BLACK}OpenAI API key is invalid: {e}{Style.RESET_ALL}")
+    input()
     quit()
-
-
 
 
 
@@ -481,9 +585,38 @@ while True:
                 "Both": f"1. Output of the tasks: Terminal / File / {Back.GREEN}{Fore.BLACK}Both{Style.RESET_ALL}"
             }
             print(output_options.get(settings_output, f"Output of the tasks: {Back.MAGENTA}{Fore.BLACK}Terminal{Style.RESET_ALL} / File / Both"))
+            output_options = {
+                "gpt-3.5-turbo": f"2. Model for summarisation: {Back.GREEN}{Fore.BLACK}GPT-3.5-Turbo{Style.RESET_ALL} / GPT-4",
+                "gpt-4": f"2. Model for summarisation: GPT-3.5-Turbo / {Back.GREEN}{Fore.BLACK}GPT-4{Style.RESET_ALL}",
+            }
+            print(output_options.get(settings_model_summarisation, f"2. Model for summarisation: {Back.GREEN}{Fore.BLACK}GPT-3.5-Turbo{Style.RESET_ALL} / GPT-4"))
+            output_options = {
+                "gpt-3.5-turbo": f"3. Model for key points extraction: {Back.GREEN}{Fore.BLACK}GPT-3.5-Turbo{Style.RESET_ALL} / GPT-4",
+                "gpt-4": f"3. Model for key points extraction: GPT-3.5-Turbo / {Back.GREEN}{Fore.BLACK}GPT-4{Style.RESET_ALL}",
+            }
+            print(output_options.get(settings_model_key_points_extraction, f"3. Model for key points extraction: {Back.GREEN}{Fore.BLACK}GPT-3.5-Turbo{Style.RESET_ALL} / GPT-4"))
+            output_options = {
+                "gpt-3.5-turbo": f"4. Model for making revision notes: {Back.GREEN}{Fore.BLACK}GPT-3.5-Turbo{Style.RESET_ALL} / GPT-4",
+                "gpt-4": f"4. Model for making revision notes: GPT-3.5-Turbo / {Back.GREEN}{Fore.BLACK}GPT-4{Style.RESET_ALL}",
+            }
+            print(output_options.get(settings_model_revision_notes, f"4. Model for making revision notes: {Back.GREEN}{Fore.BLACK}GPT-3.5-Turbo{Style.RESET_ALL} / GPT-4"))
+            output_options = {
+                "gpt-3.5-turbo": f"5. Model for quiz creation: {Back.GREEN}{Fore.BLACK}GPT-3.5-Turbo{Style.RESET_ALL} / GPT-4",
+                "gpt-4": f"5. Model for quiz creation: GPT-3.5-Turbo / {Back.GREEN}{Fore.BLACK}GPT-4{Style.RESET_ALL}",
+            }
+            print(output_options.get(settings_model_quiz, f"5. Model for quiz creation: {Back.GREEN}{Fore.BLACK}GPT-3.5-Turbo{Style.RESET_ALL} / GPT-4"))
+            output_options = {
+                "gpt-3.5-turbo": f"6. Model for key words & their definition extraction: {Back.GREEN}{Fore.BLACK}GPT-3.5-Turbo{Style.RESET_ALL} / GPT-4",
+                "gpt-4": f"6. Model for key words & their definition extraction: GPT-3.5-Turbo / {Back.GREEN}{Fore.BLACK}GPT-4{Style.RESET_ALL}",
+            }
+            print(output_options.get(settings_model_key_words_extraction, f"6. Model for key words & their definition extraction: {Back.GREEN}{Fore.BLACK}GPT-3.5-Turbo{Style.RESET_ALL} / GPT-4"))
             results = list_of_settings()
             if results == "exit":
-                break
+                if(settings_model_key_points_extraction == "gpt-4" or settings_model_key_words_extraction == "gpt-4" or settings_model_quiz == "gpt-4" or settings_model_revision_notes == "gpt-4" or settings_model_summarisation == "gpt-4"):
+                    if check_gpt4_availability() == False:
+                        input()
+                    else:
+                        break
             elif results == "":
                 continue
     elif chosen_task == 7:
